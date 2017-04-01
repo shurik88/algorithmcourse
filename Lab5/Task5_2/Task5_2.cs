@@ -17,8 +17,8 @@ namespace Lab5.Task5_2
             using (var writer = new StreamWriter("output.txt"))
             {
                 var currCommand = 0;
-                var queue = new MinPriorityQueue(size, insertCommands);
-                for(var i = 1; i < content.Length; ++i)
+                var queue = new MinPriorityQueue(size);
+                for (var i = 1; i < content.Length; ++i)
                 {
                     var line = content[i];
                     if (line == "X")
@@ -29,7 +29,6 @@ namespace Lab5.Task5_2
                     {
                         var key = Int32.Parse(line.Split(new char[] { ' ' })[1]);
                         queue.Insert(key, currCommand);
-                        currCommand++;
                     }
                     else if (line.StartsWith("D"))
                     {
@@ -40,45 +39,10 @@ namespace Lab5.Task5_2
                     {
                         throw new ArgumentException(string.Format("Unknown command:{0}", line));
                     }
+                    currCommand++;
                 }
-                
-            }
-            
-            //using (var reader = new StreamReader("input.txt"))
-            //{
-            //    var size = reader.ReadLine();//commands count
-            //    if (size == null)
-            //        throw new ArgumentException("Invalid file format");
-            //    string line;
-            //    using (var writer = new StreamWriter("output.txt"))
-            //    {
-            //        var currCommand = 0;
-            //        var queue = new MinPriorityQueue(Int32.Parse(size)); 
-            //        while ((line = reader.ReadLine()) != null)
-            //        {
-            //            if(line == "X")
-            //            {
-            //                writer.WriteLine(queue.IsEmpty ? "*" : queue.ExtractMin().ToString());
-            //            }
-            //            else if(line.StartsWith("A"))
-            //            {
-            //                var key = Int32.Parse(line.Split(new char[] { ' ' })[1]);
-            //                queue.Insert(key, currCommand);
-            //                currCommand++;
-            //            }
-            //            else if(line.StartsWith("D"))
-            //            {
-            //                var arguments = line.Split(new char[] { ' ' });
-            //                queue.DecreaseHeapKey(queue.GetIndex(Int32.Parse(arguments[1])), Int32.Parse(arguments[2]) - 1);
-            //            }
-            //            else
-            //            {
-            //                throw new ArgumentException(string.Format("Unknown command:{0}", line));
-            //            }
 
-            //        }
-            //    }
-            //}
+            }
 
         }
 
@@ -97,13 +61,13 @@ namespace Lab5.Task5_2
 
             private int _size = 0;
             private readonly int _maxSize;
-            public MinPriorityQueue(int size, int commandInsert)
+            public MinPriorityQueue(int size)
             {
                 if (size <= 0)
                     throw new ArgumentException("Invalid size");
                 _maxSize = size;
                 _arr = new Elem[size];
-                _indexes = new int[commandInsert];
+                _indexes = new int[size];
             }
 
             public bool IsEmpty { get { return _size == 0; } }
@@ -157,14 +121,9 @@ namespace Lab5.Task5_2
             public int ExtractMin()
             {
                 var min = Min;
-
-                //var command = _arr[0].Command;
-                //_commandIndexes.Remove(command);
-
                 _arr[0] = _arr[_size - 1];
                 _size--;
                 _indexes[_arr[0].Command] = 0;
-                //_commandIndexes[_arr[0].Command] = 0;
 
                 MinHeapify(0, _size);
                 return min;
