@@ -57,6 +57,7 @@
     <Compile Include="UnitTest5_Heap.cs" />
     <Compile Include="UnitTest3_1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTest6_3.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lab3\Lab3.csproj">
@@ -70,6 +71,10 @@
     <ProjectReference Include="..\Lab5\Lab5.csproj">
       <Project>{4e56ca03-0c9e-452d-88f4-778d05a75d97}</Project>
       <Name>Lab5</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lab6\Lab6.csproj">
+      <Project>{beeccca4-e645-4dfa-ab76-51f9358a0271}</Project>
+      <Name>Lab6</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
