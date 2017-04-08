@@ -11,6 +11,7 @@ namespace Lab6
     {
         static void Main(string[] args)
         {
+            Task6_4.Task6_4.Main(args);
         }
     }
 

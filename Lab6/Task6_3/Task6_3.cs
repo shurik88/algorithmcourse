@@ -20,8 +20,9 @@ namespace Lab6.Task6_3
                     File.WriteAllText("output.txt", "0");
                     return;
                 }
-                var root = ParseNode(1, content);
-                File.WriteAllText("output.txt", root.Height.ToString());
+
+                //var root = ParseNode(1, content);
+                File.WriteAllText("output.txt", GetHeight(content).ToString());
             }
             catch(Exception e)
             {
@@ -29,6 +30,38 @@ namespace Lab6.Task6_3
             }
             
 
+        }
+
+        public static int GetHeight(string[] tree)
+        {
+            var queue = new Queue<int>();
+
+            queue.Enqueue(1);
+            queue.Enqueue(0);
+
+            var height = 0;
+            while(queue.Count != 0)
+            {
+                var elem = queue.Dequeue();
+                if( elem == 0)
+                {
+                    if (queue.Count != 0)
+                        queue.Enqueue(0);
+                    height++;
+                }
+                else
+                {
+                    var nodeDef = tree[elem].Split(new[] { ' '});
+                    var left = Int32.Parse(nodeDef[1]);
+                    var right = Int32.Parse(nodeDef[2]);
+
+                    if (left != 0)
+                        queue.Enqueue(left);
+                    if (right != 0)
+                        queue.Enqueue(right);
+                }
+            }
+            return height;
         }
 
         public static Node ParseNode(int rootIndex, string[] treeDef)
