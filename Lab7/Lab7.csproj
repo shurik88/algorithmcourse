@@ -50,6 +50,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Task7_1\Task7_1.cs" />
     <Compile Include="Task7_2\Task7_2.cs" />
+    <Compile Include="Task7_3\Task7_3.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
