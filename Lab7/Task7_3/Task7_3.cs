@@ -28,32 +28,6 @@ namespace Lab7.Task7_3
                 for (var i = 1; i < content.Length; ++i)
                     writer.WriteLine(content[i]);
             }
-            //try
-            //{
-            //    var content = File.ReadAllLines("input.txt");
-            //    content[0] = content.Length.ToString();
-            //    content[content.Length - 1] = string.Join(" ", content[content.Length - 1], "0", "0");
-            //    //var size = Int32.Parse(content[0]);
-            //    var subTree = InsertLastNode(content);
-            //    subTree.Reverse();
-            //    BalanceTree(content, subTree);
-
-
-
-
-            //    using (var writer = new StreamWriter("output.txt"))
-            //    {
-            //        writer.WriteLine(content.Length - 1);
-            //        for (var i = 1; i < content.Length; ++i)
-            //            writer.WriteLine(content[i]);
-            //    }
-            //}
-            //catch (Exception e)
-            //{
-            //    //File.WriteAllText("output.txt", e.Message);
-            //}
-
-
         }
 
         private static void BigLeftShift(string[] treeDef, int node)
