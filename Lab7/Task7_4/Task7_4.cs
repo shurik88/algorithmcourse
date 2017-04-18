@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lab7.Task7_4
 {
@@ -12,34 +10,37 @@ namespace Lab7.Task7_4
         public static void Main(string[] args)
         {
             var content = File.ReadAllLines("input.txt");
-            if(content.Length == 3)
-            {
-                File.WriteAllText("output.txt","0");
-                return;
-            }
+
+            var root = ParseNode(1, null, content);
+            var rep = GetTreeStringRepresentation(root);
+            //if(content.Length == 3)
+            //{
+            //    File.WriteAllText("output.txt","0");
+            //    return;
+            //}
             //content[0] = (content.Length - 3).ToString();
             //content[content.Length - 1] = string.Join(" ", content[content.Length - 1], "0", "0");
             //var size = Int32.Parse(content[0]);
-            var root = DeleteNode(content);
-            BalanceTree(content, root);
+            //var root = DeleteNode(content);
+            //BalanceTree(content, root);
 
 
 
-            var balances = GetBalances(content);
-            if(balances.Any(x => x == 2 || x == -2))
-            {
-                throw new Exception("Invalid balancing");
-                //File.WriteAllText("output.txt", "0");
-                //return;
-            }
+            //var balances = GetBalances(content);
+            //if(balances.Any(x => x == 2 || x == -2))
+            //{
+            //    throw new Exception("Invalid balancing");
+            //    //File.WriteAllText("output.txt", "0");
+            //    //return;
+            //}
 
 
-            using (var writer = new StreamWriter("output.txt"))
-            {
-                writer.WriteLine(content.Length - 3);
-                for (var i = 1; i < content.Length - 2; ++i)
-                    writer.WriteLine(content[i]);
-            }
+            //using (var writer = new StreamWriter("output.txt"))
+            //{
+            //    writer.WriteLine(content.Length - 3);
+            //    for (var i = 1; i < content.Length - 2; ++i)
+            //        writer.WriteLine(content[i]);
+            //}
         }
 
         private static int[] GetParents(string[] treeDef)
@@ -317,10 +318,49 @@ namespace Lab7.Task7_4
             return balances;
         }
 
+        public static string[] GetTreeStringRepresentation(Node root)
+        {
+            if (root.Parent != null)
+                throw new ArgumentException("root parent is not null");
+
+            var list = new List<string>();
+
+            var queue = new Queue<Node>();
+
+            queue.Enqueue(root);
+            queue.Enqueue(null);
+
+            var height = 1;
+            while (queue.Count != 0)
+            {
+                var elem = queue.Dequeue();
+                if (elem == null)
+                {
+                    if (queue.Count != 0)
+                        queue.Enqueue(null);
+                    //height++;
+                }
+                else
+                {
+                    var nodeKey = elem.Key;
+                    var left = elem.Left;
+                    var right = elem.Right;
+
+                    if (left != null)
+                        queue.Enqueue(left);
+                    if (right != null)
+                        queue.Enqueue(right);
+                    list.Add(string.Join(" ", nodeKey, left != null ? ++height : 0, right != null ? ++height : 0));
+                }
+            }
+
+            return list.ToArray();
+        }
+
         public static Node ParseNode(int rootIndex, Node parent, string[] treeDef)
         {
             var nodeDef = treeDef[rootIndex].Split(new[] { ' ' }).Select(x => Int32.Parse(x)).ToArray();
-            var node = new Node { Key = nodeDef[0] };
+            var node = new Node { Key = nodeDef[0], Parent = parent };
             if (nodeDef[1] != 0)
                 node.Left = ParseNode(nodeDef[1], node, treeDef);
             if (nodeDef[2] != 0)
@@ -356,6 +396,12 @@ namespace Lab7.Task7_4
                 }
             }
 
+
+            public static void DeleteNode(int key)
+            {
+
+            }
+
             public static void BalanceNode(Node node)
             {
                 var balance = node.Balance;
@@ -363,7 +409,7 @@ namespace Lab7.Task7_4
                 {
                     var bNode = node.Right;
                     var rightBalance = bNode.Balance;
-                    if (rightBalance == -1)
+                    if (rightBalance == -1) // big right shift
                     {
                         var cNode = bNode.Left;
 
@@ -383,10 +429,12 @@ namespace Lab7.Task7_4
 
 
                     }
-                    else
+                    else // right shift
                     {
-                        bNode.Left.Parent = node;
                         node.Right = bNode.Left;
+                        if(bNode.Left != null)
+                            bNode.Left.Parent = node;
+                        
 
                         bNode.Left = node;
                         bNode.Parent = node.Parent;
@@ -397,28 +445,42 @@ namespace Lab7.Task7_4
                 else if (balance == -2)
                 {
                     var bNode = node.Left;
-                    var leftBalance = node.Left.Balance;
+                    var leftBalance = bNode.Balance;
+                    if(leftBalance == 1) //big left shift
+                    {
+                        var cNode = bNode.Right;
+
+                        node.Left = cNode.Right;
+                        if (cNode.Right != null)
+                            cNode.Right.Parent = node;
+                        bNode.Right = cNode.Left;
+                        if (cNode.Left != null)
+                            cNode.Left.Parent = bNode;
+
+                        cNode.Right = node;
+                        cNode.Parent = node.Parent;
+                        node.Parent = cNode;
+
+                        cNode.Left = bNode;
+                        bNode.Parent = cNode;
+                    }
+                    else // left shift
+                    {
+                        node.Left = bNode.Right;
+                        if(bNode.Right != null)
+                            bNode.Right.Parent = node;
+                        
+
+                        bNode.Right = node;
+                        bNode.Parent = node.Parent;
+                        node.Parent = bNode;
+                    }
+
+
 
                 }
                 
             }
-
-            //public static Node Insert(Node to, Node inserted)
-            //{
-            //    if (to == null)
-            //        return inserted;
-            //    if (to.Key > inserted.Key)
-            //    {
-            //        to.Left = Insert(to.Left, inserted);
-            //        return to.Left;
-            //    }
-            //    else
-            //    {
-            //        to.Right = Insert(to.Right, inserted);
-            //        return to.Right;
-            //    }
-
-            //}
         }
     }
 }
