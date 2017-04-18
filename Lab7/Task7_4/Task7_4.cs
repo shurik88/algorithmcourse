@@ -10,9 +10,34 @@ namespace Lab7.Task7_4
         public static void Main(string[] args)
         {
             var content = File.ReadAllLines("input.txt");
+            if (content.Length <= 2)
+                throw new ArgumentException("Invalid file");
 
             var root = ParseNode(1, null, content);
-            var rep = GetTreeStringRepresentation(root);
+
+            var currNode = Node.DeleteNode(root, Int32.Parse(content[content.Length - 1]));
+            if(currNode == null)
+            {
+                File.WriteAllText("output.txt", "0");
+                return;
+            }
+            while (true)
+            {
+                currNode = Node.BalanceNode(currNode);
+                if (currNode.Parent == null)
+                    break;
+                currNode = currNode.Parent;
+            }
+
+            var list = GetTreeStringRepresentation(currNode);
+
+            using (var writer = new StreamWriter("output.txt"))
+            {
+                writer.WriteLine(list.Length);
+                foreach (var node in list)
+                    writer.WriteLine(node);
+            }
+            //var rep = GetTreeStringRepresentation(root);
             //if(content.Length == 3)
             //{
             //    File.WriteAllText("output.txt","0");
@@ -43,18 +68,334 @@ namespace Lab7.Task7_4
             //}
         }
 
-        private static int[] GetParents(string[] treeDef)
+        public static string[] GetTreeStringRepresentation(Node root)
         {
-            var parents = new int[treeDef.Length - 1];
-            for(var i = 1; i < treeDef.Length - 1; ++i)
+            if (root.Parent != null)
+                throw new ArgumentException("root parent is not null");
+
+            var list = new List<string>();
+
+            var queue = new Queue<Node>();
+
+            queue.Enqueue(root);
+            queue.Enqueue(null);
+
+            var height = 1;
+            while (queue.Count != 0)
             {
-                var nodeDef = treeDef[i].Split(new[] { ' ' });
-                var left = Int32.Parse(nodeDef[1]);
-                var right = Int32.Parse(nodeDef[2]);
-                parents[left] = i;
-                parents[right] = i;
+                var elem = queue.Dequeue();
+                if (elem == null)
+                {
+                    if (queue.Count != 0)
+                        queue.Enqueue(null);
+                    //height++;
+                }
+                else
+                {
+                    var nodeKey = elem.Key;
+                    var left = elem.Left;
+                    var right = elem.Right;
+
+                    if (left != null)
+                        queue.Enqueue(left);
+                    if (right != null)
+                        queue.Enqueue(right);
+                    list.Add(string.Join(" ", nodeKey, left != null ? ++height : 0, right != null ? ++height : 0));
+                }
             }
-            return parents;
+
+            return list.ToArray();
+        }
+
+        public static Node ParseNode(int rootIndex, Node parent, string[] treeDef)
+        {
+            var nodeDef = treeDef[rootIndex].Split(new[] { ' ' }).Select(x => Int32.Parse(x)).ToArray();
+            var node = new Node { Key = nodeDef[0], Parent = parent };
+            if (nodeDef[1] != 0)
+                node.Left = ParseNode(nodeDef[1], node, treeDef);
+            if (nodeDef[2] != 0)
+                node.Right = ParseNode(nodeDef[2], node, treeDef);
+            return node;
+        }
+
+        public class Node
+        {
+            public Node Parent { get; set; }
+
+            public int Key { get; set; }
+
+            public Node Left { get; set; }
+
+            public Node Right { get; set; }
+
+            public int Height
+            {
+                get
+                {
+                    var left = Left != null ? Left.Height : 0;
+                    var right = Right != null ? Right.Height : 0;
+                    return Math.Max(left, right) + 1;
+                }
+            }
+
+            public int Balance
+            {
+                get
+                {
+                    return (Right != null ? Right.Height : 0) - (Left != null ? Left.Height : 0);
+                }
+            }
+
+            public static Node Insert(Node root, int key)
+            {
+                if (root == null)
+                    return new Node { Key = key };
+                if (root.Key == key)
+                    throw new ArgumentException("Dublicate node key");
+                var currNode = root;
+                while (true)
+                {
+                    if (key > currNode.Key)
+                    {
+                        if (currNode.Right != null)
+                            currNode = currNode.Right;
+                        else
+                        {
+                            var newNode = new Node { Key = key, Parent = currNode };
+                            currNode.Right = newNode;
+                            return newNode;
+                        }
+                    }
+                    else
+                    {
+                        if (currNode.Left != null)
+                            currNode = currNode.Left;
+                        else
+                        {
+                            var newNode = new Node { Key = key, Parent = currNode };
+                            currNode.Left = newNode;
+                            return newNode;
+                        }
+                    }
+                }
+            }
+
+
+            public static Node DeleteNode(Node root, int key)
+            {
+                var currNode = root;
+                while(true)
+                {
+                    if (currNode == null)
+                        return null;
+                    if(currNode.Key == key)
+                    {
+                        var parent = currNode.Parent;
+                        if (currNode.Left == null && currNode.Right == null)
+                        {                           
+                            if(parent != null)
+                            {
+                                if (parent.Key < currNode.Key)
+                                    parent.Right = null;
+                                else
+                                    parent.Left = null;
+                            }
+                            currNode = null;
+                            return parent;
+                        }
+                        else if(currNode.Left == null && currNode.Right != null)
+                        {
+                            var right = currNode.Right;
+                            if (parent != null)
+                            {                                
+                                if (parent.Key < currNode.Key)
+                                    parent.Right = right;
+                                else
+                                    parent.Left = right;
+                                right.Parent = parent;
+                                currNode = null;
+                                return right;
+                            }
+                            else
+                            {
+                                right.Parent = null;
+                                currNode = null;
+                                return right;
+                            }                            
+                        }
+                        else
+                        {
+                            var right = currNode.Left.GetRightestNode();
+                            var rightParent = right.Parent;
+                            if (rightParent == currNode)
+                            {
+                                right.Right = currNode.Right;
+                                if (currNode.Right != null)
+                                    currNode.Right.Parent = right;
+                                right.Parent = currNode.Parent;
+                                if(currNode.Parent != null)
+                                {
+                                    if (currNode.Parent.Key < right.Key)
+                                        currNode.Parent.Right = right;
+                                    else
+                                        currNode.Parent.Left = right;
+                                }
+                                currNode = null;
+                                return right;
+                            }
+                            else
+                            {
+                                rightParent.Right = right.Left;
+                                if (right.Left != null)
+                                    right.Left.Parent = rightParent;
+
+                                right.Left = currNode.Left;
+                                currNode.Left.Parent = right;
+                                
+                                right.Right = currNode.Right;
+                                if (currNode.Right != null)
+                                    currNode.Right.Parent = right;
+
+                                right.Parent = currNode.Parent;
+                                if (currNode.Parent != null)
+                                {
+                                    if (currNode.Parent.Key < right.Key)
+                                        currNode.Parent.Right = right;
+                                    else
+                                        currNode.Parent.Left = right;
+                                }
+                                currNode = null;
+                                return rightParent;
+                            }
+                        }
+                    }
+                    else if(currNode.Key < key)
+                        currNode = currNode.Right;
+                    else
+                        currNode = currNode.Left;
+                }
+            }
+
+            public Node GetRightestNode()
+            {
+                var currNode = this;
+                while(true)
+                {
+                    if (currNode.Right == null)
+                        return currNode;
+                    currNode = currNode.Right;
+                }
+            }
+
+            public static Node BalanceNode(Node node)
+            {
+                var balance = node.Balance;
+                if (balance == 2)
+                {
+                    var bNode = node.Right;
+                    var rightBalance = bNode.Balance;
+                    if (rightBalance == -1) // big right shift
+                    {
+                        var cNode = bNode.Left;
+
+                        node.Right = cNode.Left;
+                        if (cNode.Left != null)
+                            cNode.Left.Parent = node;
+                        bNode.Left = cNode.Right;
+                        if (cNode.Right != null)
+                            cNode.Right.Parent = bNode;
+
+                        cNode.Left = node;
+                        cNode.Parent = node.Parent;
+
+                        if (node.Parent != null)
+                        {
+                            if (node.Parent.Key < cNode.Key)
+                                node.Parent.Right = cNode;
+                            else
+                                node.Parent.Left = cNode;
+                        }
+                        node.Parent = cNode;
+
+                        cNode.Right = bNode;
+                        bNode.Parent = cNode;
+                        return cNode;
+
+                    }
+                    else // right shift
+                    {
+                        node.Right = bNode.Left;
+                        if (bNode.Left != null)
+                            bNode.Left.Parent = node;
+
+
+                        bNode.Left = node;
+                        bNode.Parent = node.Parent;
+                        if (node.Parent != null)
+                        {
+                            if (node.Parent.Key < bNode.Key)
+                                node.Parent.Right = bNode;
+                            else
+                                node.Parent.Left = bNode;
+                        }
+                        node.Parent = bNode;
+                        return bNode;
+                    }
+
+                }
+                else if (balance == -2)
+                {
+                    var bNode = node.Left;
+                    var leftBalance = bNode.Balance;
+                    if (leftBalance == 1) //big left shift
+                    {
+                        var cNode = bNode.Right;
+
+                        node.Left = cNode.Right;
+                        if (cNode.Right != null)
+                            cNode.Right.Parent = node;
+                        bNode.Right = cNode.Left;
+                        if (cNode.Left != null)
+                            cNode.Left.Parent = bNode;
+
+                        cNode.Right = node;
+                        cNode.Parent = node.Parent;
+                        if (node.Parent != null)
+                        {
+                            if (node.Parent.Key < cNode.Key)
+                                node.Parent.Right = cNode;
+                            else
+                                node.Parent.Left = cNode;
+                        }
+                        node.Parent = cNode;
+
+                        cNode.Left = bNode;
+                        bNode.Parent = cNode;
+                        return cNode;
+                    }
+                    else // left shift
+                    {
+                        node.Left = bNode.Right;
+                        if (bNode.Right != null)
+                            bNode.Right.Parent = node;
+
+
+                        bNode.Right = node;
+                        bNode.Parent = node.Parent;
+                        if (node.Parent != null)
+                        {
+                            if (node.Parent.Key < bNode.Key)
+                                node.Parent.Right = bNode;
+                            else
+                                node.Parent.Left = bNode;
+                        }
+                        node.Parent = bNode;
+                        return bNode;
+                    }
+                }
+                return node;
+
+            }
         }
 
         private static int DeleteNode(string[] treeDef)
@@ -318,169 +659,19 @@ namespace Lab7.Task7_4
             return balances;
         }
 
-        public static string[] GetTreeStringRepresentation(Node root)
+        private static int[] GetParents(string[] treeDef)
         {
-            if (root.Parent != null)
-                throw new ArgumentException("root parent is not null");
-
-            var list = new List<string>();
-
-            var queue = new Queue<Node>();
-
-            queue.Enqueue(root);
-            queue.Enqueue(null);
-
-            var height = 1;
-            while (queue.Count != 0)
+            var parents = new int[treeDef.Length - 1];
+            for (var i = 1; i < treeDef.Length - 1; ++i)
             {
-                var elem = queue.Dequeue();
-                if (elem == null)
-                {
-                    if (queue.Count != 0)
-                        queue.Enqueue(null);
-                    //height++;
-                }
-                else
-                {
-                    var nodeKey = elem.Key;
-                    var left = elem.Left;
-                    var right = elem.Right;
-
-                    if (left != null)
-                        queue.Enqueue(left);
-                    if (right != null)
-                        queue.Enqueue(right);
-                    list.Add(string.Join(" ", nodeKey, left != null ? ++height : 0, right != null ? ++height : 0));
-                }
+                var nodeDef = treeDef[i].Split(new[] { ' ' });
+                var left = Int32.Parse(nodeDef[1]);
+                var right = Int32.Parse(nodeDef[2]);
+                parents[left] = i;
+                parents[right] = i;
             }
-
-            return list.ToArray();
+            return parents;
         }
 
-        public static Node ParseNode(int rootIndex, Node parent, string[] treeDef)
-        {
-            var nodeDef = treeDef[rootIndex].Split(new[] { ' ' }).Select(x => Int32.Parse(x)).ToArray();
-            var node = new Node { Key = nodeDef[0], Parent = parent };
-            if (nodeDef[1] != 0)
-                node.Left = ParseNode(nodeDef[1], node, treeDef);
-            if (nodeDef[2] != 0)
-                node.Right = ParseNode(nodeDef[2], node, treeDef);
-            return node;
-        }
-
-        public class Node
-        {
-            public Node Parent { get; set; }
-
-            public int Key { get; set; }
-
-            public Node Left { get; set; }
-
-            public Node Right { get; set; }
-
-            public int Height
-            {
-                get
-                {
-                    var left = Left != null ? Left.Height : 0;
-                    var right = Right != null ? Right.Height : 0;
-                    return Math.Max(left, right) + 1;
-                }
-            }
-
-            public int Balance
-            {
-                get
-                {
-                    return (Right != null ? Right.Height : 0) - (Left != null ? Left.Height : 0);
-                }
-            }
-
-
-            public static void DeleteNode(int key)
-            {
-
-            }
-
-            public static void BalanceNode(Node node)
-            {
-                var balance = node.Balance;
-                if (balance == 2)
-                {
-                    var bNode = node.Right;
-                    var rightBalance = bNode.Balance;
-                    if (rightBalance == -1) // big right shift
-                    {
-                        var cNode = bNode.Left;
-
-                        node.Right = cNode.Left;
-                        if(cNode.Left != null)
-                            cNode.Left.Parent = node;
-                        bNode.Left = cNode.Right;
-                        if (cNode.Right != null)
-                            cNode.Right.Parent = bNode;
-
-                        cNode.Left = node;
-                        cNode.Parent = node.Parent;
-                        node.Parent = cNode;
-
-                        cNode.Right = bNode;
-                        bNode.Parent = cNode;
-
-
-                    }
-                    else // right shift
-                    {
-                        node.Right = bNode.Left;
-                        if(bNode.Left != null)
-                            bNode.Left.Parent = node;
-                        
-
-                        bNode.Left = node;
-                        bNode.Parent = node.Parent;
-                        node.Parent = bNode;
-                    }
-
-                }
-                else if (balance == -2)
-                {
-                    var bNode = node.Left;
-                    var leftBalance = bNode.Balance;
-                    if(leftBalance == 1) //big left shift
-                    {
-                        var cNode = bNode.Right;
-
-                        node.Left = cNode.Right;
-                        if (cNode.Right != null)
-                            cNode.Right.Parent = node;
-                        bNode.Right = cNode.Left;
-                        if (cNode.Left != null)
-                            cNode.Left.Parent = bNode;
-
-                        cNode.Right = node;
-                        cNode.Parent = node.Parent;
-                        node.Parent = cNode;
-
-                        cNode.Left = bNode;
-                        bNode.Parent = cNode;
-                    }
-                    else // left shift
-                    {
-                        node.Left = bNode.Right;
-                        if(bNode.Right != null)
-                            bNode.Right.Parent = node;
-                        
-
-                        bNode.Right = node;
-                        bNode.Parent = node.Parent;
-                        node.Parent = bNode;
-                    }
-
-
-
-                }
-                
-            }
-        }
     }
 }

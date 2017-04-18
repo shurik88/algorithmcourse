@@ -10,7 +10,7 @@ namespace Lab7
     {
         static void Main(string[] args)
         {
-            Task7_2.Task7_2.Main(args);
+            Task7_4.Task7_4.Main(args);
         }
     }
 }
