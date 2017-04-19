@@ -9,34 +9,102 @@ namespace Lab7.Task7_5
     {
         public static void Main(string[] args)
         {
-            using (var reader = new StreamReader("input.txt"))
+            try
             {
-                var size = reader.ReadLine();//commands count
-                if (size == null)
-                    throw new ArgumentException("Invalid file format");
-                string line = null;
-                reader.ReadLine();
-                using (var writer = new StreamWriter("output.txt"))
+                using (var reader = new StreamReader("input.txt"))
                 {
-                    while ((line = reader.ReadLine()) != null)
+                    var size = reader.ReadLine();//commands count
+                    if (size == null)
+                        throw new ArgumentException("Invalid file format");
+                    string line = null;
+                    //reader.ReadLine();
+                    Node root = null;
+                    using (var writer = new StreamWriter("output.txt"))
                     {
-                        var command = line.Split(new[] { ' ' });
-                        switch(command[0])
+                        while ((line = reader.ReadLine()) != null)
                         {
-                            case "A":
-                                break;
-                            case "D":
-                                break;
-                            case "C":
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException("Unknown command");
-                            
-                        }
+                            var command = line.Split(new[] { ' ' });
+                            Node currNode = null;
+                            Node foundNode = null;
+                            if(line == "A 1")
+                            {
 
+                            }
+                            switch (command[0])
+                            {
+
+                                case "A":
+                                    var key = Int32.Parse(command[1]);
+                                    if (root == null)
+                                        root = new Node { Key = key };
+                                    else
+                                    {
+                                        currNode = Node.Insert(root, key);
+                                        if(currNode != null)
+                                        {
+                                            while (true)
+                                            {
+                                                currNode = Node.BalanceNode(currNode);
+                                                if (currNode.Parent == null)
+                                                    break;
+                                                currNode = currNode.Parent;
+                                            }
+
+                                            root = currNode;
+                                        }                                        
+
+                                    }
+                                    writer.WriteLine(root.Balance);
+                                    break;
+                                case "D":
+                                    foundNode = (root != null ? root.Find(Int32.Parse(command[1])) : null);
+                                    if (foundNode != null)
+                                    {
+                                        currNode = Node.DeleteNode(foundNode);
+                                        if (currNode == null)
+                                            root = null;
+                                        else
+                                        {
+                                            while (true)
+                                            {
+                                                currNode = Node.BalanceNode(currNode);
+                                                if (currNode.Parent == null)
+                                                    break;
+                                                currNode = currNode.Parent;
+                                            }
+                                            root = currNode;
+                                        }
+
+                                    }
+                                    writer.WriteLine(root != null ? root.Balance : 0);
+
+                                    break;
+                                case "C":
+                                    foundNode = (root != null ? root.Find(Int32.Parse(command[1])) : null);
+                                    writer.WriteLine(foundNode == null ? "N" : "Y");
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException("Unknown command");
+
+                            }
+                            //DisplayTree(root);
+
+                        }
                     }
                 }
             }
+            catch(Exception e)
+            {
+                File.WriteAllText("output.txt", e.Message);
+            }
+        }
+
+        public static void DisplayTree(Node root)
+        {
+            var list = GetTreeStringRepresentation(root);
+            Console.WriteLine(list.Length);
+            foreach (var node in list)
+                Console.WriteLine(node);
         }
 
         public static string[] GetTreeStringRepresentation(Node root)
@@ -161,8 +229,8 @@ namespace Lab7.Task7_5
             {
                 if (root == null)
                     return new Node { Key = key };
-                if (root.Key == key)
-                    throw new ArgumentException("Dublicate node key");
+                //if (root.Key == key)
+                //    return null;//throw new ArgumentException("Dublicate node key");
                 var currNode = root;
                 while (true)
                 {
@@ -177,7 +245,7 @@ namespace Lab7.Task7_5
                             return newNode;
                         }
                     }
-                    else
+                    else if (key < currNode.Key)
                     {
                         if (currNode.Left != null)
                             currNode = currNode.Left;
@@ -188,6 +256,8 @@ namespace Lab7.Task7_5
                             return newNode;
                         }
                     }
+                    else
+                        return null;
                 }
             }
 
