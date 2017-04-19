@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -9,6 +10,7 @@ namespace Lab7.Task7_5
     {
         public static void Main(string[] args)
         {
+            
             try
             {
                 using (var reader = new StreamReader("input.txt"))
@@ -26,35 +28,59 @@ namespace Lab7.Task7_5
                             var command = line.Split(new[] { ' ' });
                             Node currNode = null;
                             Node foundNode = null;
-                            if(line == "A 1")
-                            {
-
-                            }
                             switch (command[0])
                             {
 
                                 case "A":
+                                    var stopWatch = new Stopwatch();
+                                    stopWatch.Start();
                                     var key = Int32.Parse(command[1]);
                                     if (root == null)
+                                    {
                                         root = new Node { Key = key };
+                                        writer.WriteLine(root.Balance);
+                                    }
                                     else
                                     {
+                                        //long insertMs = 0, balancingMs = 0, rootMs = 0, calculationMs = 0;
+                                        //var stopWatch = new Stopwatch();
+                                        //stopWatch.Start();
                                         currNode = Node.Insert(root, key);
-                                        if(currNode != null)
+
+                                        //stopWatch.Stop();
+                                        //insertMs = stopWatch.ElapsedMilliseconds;
+                                        
+                                        if (currNode != null && currNode.Parent != null && currNode.Parent.Parent != null)
                                         {
+                                            //stopWatch.Restart();
+                                            currNode = currNode.Parent.Parent;
+                                            //currNode = Node.BalanceNode(currNode);
+                                            //currNode = Node.BalanceNode(currNode);
                                             while (true)
                                             {
+                                                var currNodekey = currNode.Key;
                                                 currNode = Node.BalanceNode(currNode);
-                                                if (currNode.Parent == null)
+                                                if (currNode.Parent == null || currNode.Key != currNodekey)
                                                     break;
                                                 currNode = currNode.Parent;
                                             }
-
-                                            root = currNode;
-                                        }                                        
+                                            //stopWatch.Stop();
+                                            //balancingMs = stopWatch.ElapsedMilliseconds;
+                                            //root = currNode;
+                                            //stopWatch.Restart();
+                                            root = currNode.Root;
+                                            //stopWatch.Stop();
+                                            //rootMs = stopWatch.ElapsedMilliseconds;
+                                        }
+                                        //stopWatch.Restart();
+                                        writer.WriteLine(root.Balance);
+                                        //stopWatch.Stop();
+                                        //calculationMs = stopWatch.ElapsedMilliseconds;
+                                        //Console.WriteLine($"{line} {insertMs} {balancingMs} {rootMs} {calculationMs}");
 
                                     }
-                                    writer.WriteLine(root.Balance);
+                                    stopWatch.Stop();
+                                    Console.WriteLine($"{line} {stopWatch.ElapsedMilliseconds}");
                                     break;
                                 case "D":
                                     foundNode = (root != null ? root.Find(Int32.Parse(command[1])) : null);

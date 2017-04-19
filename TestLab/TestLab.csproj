@@ -54,12 +54,21 @@
   <ItemGroup>
     <Compile Include="DataGenerator.cs" />
     <Compile Include="SortingValidator.cs" />
+    <Compile Include="UnitTest7_5.cs" />
     <Compile Include="UnitTest5_Heap.cs" />
     <Compile Include="UnitTest3_1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTest6_3.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Lab1\Lab1.csproj">
+      <Project>{3065f964-f7f3-40cf-a1f7-78d23a52f588}</Project>
+      <Name>Lab1</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lab2\Lab2.csproj">
+      <Project>{f6b5acb4-e1b7-418b-b647-d46667f5e063}</Project>
+      <Name>Lab2</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lab3\Lab3.csproj">
       <Project>{c381e010-90a3-4f01-901b-cf957fca4ad3}</Project>
       <Name>Lab3</Name>
@@ -75,6 +84,10 @@
     <ProjectReference Include="..\Lab6\Lab6.csproj">
       <Project>{beeccca4-e645-4dfa-ab76-51f9358a0271}</Project>
       <Name>Lab6</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lab7\Lab7.csproj">
+      <Project>{4340d1a3-54d9-4322-9035-0bc47424f7ef}</Project>
+      <Name>Lab7</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
