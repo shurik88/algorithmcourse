@@ -10,6 +10,7 @@ namespace Lab8
     {
         static void Main(string[] args)
         {
+            Task8_3.Task8_3.Main(args);
         }
     }
 }
